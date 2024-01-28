@@ -98,16 +98,18 @@ class CommandController {
         .json({ message: 'Esta comanda não existe', command: null });
     }
 
-    const newProducts = products
-      .filter((item) => item.category === 'Pratos' || item.category === "Bebidas-Cozinha" || item.category === "Porções")
-      .map((product) => ({
-        name: product.name,
-        amount: product.amount,
-        id: product._id,
-      })) || [];
+    let hasSomeProductToSendToKitchen = false
+    if (products) {
+      const newProducts = products
+        .filter((item) => item.category === 'Pratos' || item.category === "Bebidas-Cozinha" || item.category === "Porções")
+        .map((product) => ({
+          name: product.name,
+          amount: product.amount,
+          id: product._id,
+        })) || [];
+      hasSomeProductToSendToKitchen = verifyChanges(commandToUpdate.products, newProducts)
+    }
 
-
-    const hasSomeProductToSendToKitchen = verifyChanges(commandToUpdate.products, newProducts)
 
     let hasPendingOrders
     if (hasSomeProductToSendToKitchen) {
