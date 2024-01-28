@@ -21,6 +21,7 @@ const commandSchema = new Schema({
   total: { type: Number, default: 0 },
   totalPayed: { type: Number, default: 0 },
   isActive: { type: Boolean, default: true },
+  hasPendingOrders: { type: Boolean, default: false },
   paymentTypes: [String],
   discount: {
     type: Number,

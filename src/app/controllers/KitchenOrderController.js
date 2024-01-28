@@ -103,6 +103,11 @@ class KitchenOrderController {
       });
     }
 
+    await CommandsRepository.update({
+      _id: commandId,
+      hasPendingOrders: false
+    });
+
     const kitchenOrderCreated = await KitchenOrdersRepository.create({
       commandId,
       table,

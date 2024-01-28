@@ -2,6 +2,7 @@ const CommandsRepository = require('../repositories/CommandsRepository');
 const PaymentsRepository = require('../repositories/PaymentsRepository');
 const ProductsRepository = require('../repositories/ProductsRepository');
 const { someIsEmpty } = require('../utils/someIsEmpty');
+const { verifyChanges } = require('../utils/verifyIfProductsChange');
 
 class CommandController {
   async index(req, res) {
@@ -80,8 +81,9 @@ class CommandController {
       products,
       total,
       paymentType,
-      discount,
+      discount
     } = req.body;
+
 
     if (!id) {
       return res
@@ -95,6 +97,23 @@ class CommandController {
         .status(400)
         .json({ message: 'Esta comanda não existe', command: null });
     }
+
+    const newProducts = products
+      .filter((item) => item.category === 'Pratos' || item.category === "Bebidas-Cozinha" || item.category === "Porções")
+      .map((product) => ({
+        name: product.name,
+        amount: product.amount,
+        id: product._id,
+      })) || [];
+
+
+    const hasSomeProductToSendToKitchen = verifyChanges(commandToUpdate.products, newProducts)
+
+    let hasPendingOrders
+    if (hasSomeProductToSendToKitchen) {
+      hasPendingOrders = true
+    }
+
 
     const tableExists = await CommandsRepository.findByTable({ table });
     if (tableExists && tableExists._id.valueOf() !== id) {
@@ -133,6 +152,21 @@ class CommandController {
 
     const paymentTypes = [...commandToUpdate.paymentTypes, paymentType];
 
+
+    console.log({
+      _id: id,
+      table,
+      waiter,
+      fishingType,
+      total: commandTotalFormatted,
+      isActive,
+      products,
+      discount,
+      totalPayed: updateTotal === 'true' ? newTotalPayed : undefined,
+      paymentTypes: paymentTypes.filter(Boolean),
+      hasPendingOrders: hasPendingOrders || false
+    })
+
     const updatedCommand = await CommandsRepository.update({
       _id: id,
       table,
@@ -144,6 +178,7 @@ class CommandController {
       discount,
       totalPayed: updateTotal === 'true' ? newTotalPayed : undefined,
       paymentTypes: paymentTypes.filter(Boolean),
+      hasPendingOrders: hasPendingOrders || false
     });
 
     if (updatedCommand === null) {
