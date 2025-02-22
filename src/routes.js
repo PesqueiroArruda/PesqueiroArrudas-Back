@@ -7,6 +7,7 @@ const KitchenOrderController = require('./app/controllers/KitchenOrderController
 const CashierController = require('./app/controllers/CashierController');
 const AdminController = require('./app/controllers/AdminController');
 const assurePassword = require('./app/middlewares/assurePassword');
+const IfoodController = require('./app/controllers/IfoodController');
 
 const router = Router();
 
@@ -19,6 +20,9 @@ router.post(
   '/auth/access-closed-cashiers',
   AuthController.accessClosedCashiers
 );
+
+// Ifood Routes
+router.post('/webhook/ifood/order', IfoodController.store)
 
 // Products Routes
 router.get('/products', ProductController.index);
