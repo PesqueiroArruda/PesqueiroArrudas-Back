@@ -2,6 +2,8 @@ class AuthController {
   index(req, res) {
     const { accessKey } = req.body;
 
+    console.log(accessKey)
+
     if (!accessKey) {
       return res.status(400).json({
         message: 'Uma chave de acesso precisa ser enviada',
@@ -9,18 +11,22 @@ class AuthController {
       });
     }
 
-    const isCorrect = accessKey === process.env.ACCESS_KEY;
+    const isAdmin = accessKey === process.env.ACCESS_ADMIN_KEY
+
+    const isCorrect = isAdmin || accessKey === process.env.ACCESS_USER_KEY;
 
     if (!isCorrect) {
       return res.status(401).json({
         message: 'Chave de acesso inválida',
         isAuthorized: false,
+        isAdmin
       });
     }
 
     res.json({
       message: 'Autorizado',
       isAuthorized: true,
+      isAdmin
     });
   }
 
