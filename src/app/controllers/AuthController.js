@@ -2,8 +2,6 @@ class AuthController {
   index(req, res) {
     const { accessKey } = req.body;
 
-    console.log(accessKey)
-
     if (!accessKey) {
       return res.status(400).json({
         message: 'Uma chave de acesso precisa ser enviada',
