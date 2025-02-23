@@ -7,7 +7,7 @@ const assurePassword = (req, res, next) => {
       .json({ message: 'Chave de acesso precisa ser enviada.', reset: false });
   }
 
-  if (accessKey !== process.env.ACCESS_KEY) {
+  if (accessKey !== process.env.ACCESS_ADMIN_KEY) {
     return res
       .status(401)
       .json({ message: 'Chave de acesso inválida.', reset: false });
