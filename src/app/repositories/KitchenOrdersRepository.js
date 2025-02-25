@@ -6,7 +6,7 @@ class KitchenOrdersRepository {
     return kitchenOrders;
   }
 
-  async create({ commandId, table, waiter, products, observation, isMade }) {
+  async create({ commandId, table, waiter, products, observation, isMade, orderCategory }) {
     const newKitchenOrder = new KitchenOrder({
       commandId,
       table,
@@ -14,6 +14,7 @@ class KitchenOrdersRepository {
       products,
       observation,
       isMade,
+      orderCategory
     });
 
     const kitchenOrder = newKitchenOrder.save();

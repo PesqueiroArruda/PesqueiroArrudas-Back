@@ -39,6 +39,10 @@ const kitchenOrderSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  orderCategory: {
+    type: String,
+    default: 'kitchen'
+  }
 });
 
 const KitchenOrder = mongoose.model('KitchenOrder', kitchenOrderSchema);
