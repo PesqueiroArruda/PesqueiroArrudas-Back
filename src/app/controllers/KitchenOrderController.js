@@ -15,7 +15,7 @@ class KitchenOrderController {
 
   async store(req, res) {
     const socket = req.io;
-    const { commandId, table, waiter, products, observation, isMade, orderCategory  } =
+    const { commandId, table, waiter, products, observation, isMade, orderCategory, orderWaiter  } =
       req.body;
 
     const someFieldIsEmpty = someIsEmpty([table, waiter, commandId]);
@@ -115,7 +115,8 @@ class KitchenOrderController {
       products: productsToPrepare,
       observation,
       isMade,
-      orderCategory
+      orderCategory,
+      orderWaiter
     });
 
     // SOCKET

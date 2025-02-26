@@ -42,6 +42,10 @@ const kitchenOrderSchema = new Schema({
   orderCategory: {
     type: String,
     default: 'kitchen'
+  },
+  orderWaiter: {
+    type: String,
+    default: ''
   }
 });
 
