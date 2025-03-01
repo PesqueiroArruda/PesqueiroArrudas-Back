@@ -27,7 +27,7 @@ class KitchenOrderController {
     }
 
     if (products?.length === 0 || !products) {
-      return res.status(400).json({
+      return res.status(200).json({
         message: 'Nenhum produto para ser preparado foi informado',
         kitchenOrder: null,
       });
