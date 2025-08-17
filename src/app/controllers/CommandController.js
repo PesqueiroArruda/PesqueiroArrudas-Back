@@ -154,21 +154,6 @@ class CommandController {
 
     const paymentTypes = [...commandToUpdate.paymentTypes, paymentType];
 
-
-    console.log({
-      _id: id,
-      table,
-      waiter,
-      fishingType,
-      total: commandTotalFormatted,
-      isActive,
-      products,
-      discount,
-      totalPayed: updateTotal === 'true' ? newTotalPayed : undefined,
-      paymentTypes: paymentTypes.filter(Boolean),
-      hasPendingOrders: hasPendingOrders || false
-    })
-
     const updatedCommand = await CommandsRepository.update({
       _id: id,
       table,
