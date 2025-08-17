@@ -6,7 +6,7 @@ class KitchenOrdersRepository {
     return kitchenOrders;
   }
 
-  async create({ commandId, table, waiter, products, observation, isMade, orderCategory, orderWaiter }) {
+  async create({ commandId, table, waiter, products, observation, isMade, isThawed, orderCategory, orderWaiter }) {
     const newKitchenOrder = new KitchenOrder({
       commandId,
       table,
@@ -14,6 +14,7 @@ class KitchenOrdersRepository {
       products,
       observation,
       isMade,
+      isThawed,
       orderCategory,
       orderWaiter
     });
@@ -22,12 +23,13 @@ class KitchenOrdersRepository {
     return kitchenOrder;
   }
 
-  async update({ orderId, isMade, products }) {
+  async update({ orderId, isMade, products, isThawed }) {
     await KitchenOrder.updateOne(
       { _id: orderId },
       {
         $set: {
           isMade,
+          isThawed,
           products,
         },
       }

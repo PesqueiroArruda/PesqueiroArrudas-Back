@@ -33,9 +33,17 @@ const kitchenOrderSchema = new Schema({
         type: Boolean,
         default: false,
       },
+      isThawed: {
+        type: Boolean,
+        default: false,
+      },
     },
   ],
   isMade: {
+    type: Boolean,
+    default: false,
+  },
+  isThawed: {
     type: Boolean,
     default: false,
   },

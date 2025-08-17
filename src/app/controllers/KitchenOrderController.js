@@ -15,7 +15,7 @@ class KitchenOrderController {
 
   async store(req, res) {
     const socket = req.io;
-    const { commandId, table, waiter, products, observation, isMade, orderCategory, orderWaiter  } =
+    const { commandId, table, waiter, products, observation, isMade, isThawed, orderCategory, orderWaiter  } =
       req.body;
 
     const someFieldIsEmpty = someIsEmpty([table, waiter, commandId]);
@@ -115,6 +115,7 @@ class KitchenOrderController {
       products: productsToPrepare,
       observation,
       isMade,
+      isThawed,
       orderCategory,
       orderWaiter
     });
@@ -133,7 +134,7 @@ class KitchenOrderController {
   async update(req, res) {
     const socket = req.io;
     const { id } = req.params;
-    const { isMade, products } = req.body;
+    const { isMade, products, isThawed } = req.body;
 
     if (!id) {
       return res.status(400).json({
@@ -145,6 +146,7 @@ class KitchenOrderController {
     const updatedKitchenOrder = await KitchenOrdersRepository.update({
       orderId: id,
       isMade: products?.length === 0 ? true : isMade,
+      isThawed,
       products,
     });
 
