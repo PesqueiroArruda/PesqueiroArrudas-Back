@@ -1,3 +1,4 @@
+// src/controllers/KitchenOrderController.js
 const CommandsRepository = require('../repositories/CommandsRepository');
 const KitchenOrdersRepository = require('../repositories/KitchenOrdersRepository');
 
@@ -6,17 +7,32 @@ const { someIsEmpty } = require('../utils/someIsEmpty');
 
 class KitchenOrderController {
   async index(req, res) {
-    const { made } = req.query;
-    const kitchenOrders = await KitchenOrdersRepository.findAll({
-      made: made === 'true',
-    });
+    const { made, category } = req.query;
+
+    // Não force 'made' quando não vier na query
+    const hasMade = typeof made !== 'undefined';
+    const filters = {
+      ...(hasMade ? { made: made === 'true' } : {}),
+      ...(category ? { category } : {}),
+    };
+
+    const kitchenOrders = await KitchenOrdersRepository.findAll(filters);
     res.send(kitchenOrders);
   }
 
   async store(req, res) {
     const socket = req.io;
-    const { commandId, table, waiter, products, observation, isMade, isThawed, orderCategory, orderWaiter  } =
-      req.body;
+    const {
+      commandId,
+      table,
+      waiter,
+      products,
+      observation,
+      isMade,
+      isThawed,
+      orderCategory,
+      orderWaiter
+    } = req.body;
 
     const someFieldIsEmpty = someIsEmpty([table, waiter, commandId]);
     if (someFieldIsEmpty) {
@@ -26,7 +42,7 @@ class KitchenOrderController {
       });
     }
 
-    if (products?.length === 0 || !products) {
+    if (!products || products.length === 0) {
       return res.status(200).json({
         message: 'Nenhum produto para ser preparado foi informado',
         kitchenOrder: null,
@@ -41,21 +57,17 @@ class KitchenOrderController {
       });
     }
 
-    // Grab the orders of this command that already was being sended to kitchen
-    const commandKitchenOrders = await KitchenOrdersRepository.findByCommandId({
-      commandId,
-    });
+    // Pedidos já enviados para a cozinha dessa comanda
+    const commandKitchenOrders = await KitchenOrdersRepository.findByCommandId({ commandId });
 
-    // This all orders with products gathered
     const completeCommandKitchenOrders =
       commandKitchenOrders.length > 0
         ? gatherKitchenOrder(commandKitchenOrders)
         : null;
 
-    const commandProductsSendedToKitchen =
-      completeCommandKitchenOrders?.products;
+    const commandProductsSendedToKitchen = completeCommandKitchenOrders?.products;
 
-    // Verify if nothing changed;
+    // Verifica se houve mudança real
     const preparedProductsStr = commandProductsSendedToKitchen
       ?.map(({ name, amount }) => Object.values({ name, amount }).join(''))
       ?.join('');
@@ -70,28 +82,17 @@ class KitchenOrderController {
       });
     }
 
+    // Calcula diferença de quantidades a preparar
     const productsToPrepare = products
       .map((product) => {
         const productPrepared = commandProductsSendedToKitchen?.find(
           ({ _id }) => _id === product._id
         );
-
-        // If one same product is sended again to prepare I grabb the difference of amount of old ordering to new one
-        // In past 3 Coca was ordered. Then the customer orders more 2. Here the amount of coca will be 5 (total of coca of command);
-        // But from this 5 Coca's, 3 already was ordered to kitchen, so in this new order will has only 2 Coca's
         if (productPrepared) {
           const amountToPrepare = product.amount - productPrepared.amount;
-
-          // If one product of command comes with amount less than old order returns null.
-          // It's impossible to unprepare something.
-          if (amountToPrepare < 0) {
-            return null;
-          }
-          return amountToPrepare === 0
-            ? null
-            : { ...product, amount: amountToPrepare };
+          if (amountToPrepare < 0) return null;
+          return amountToPrepare === 0 ? null : { ...product, amount: amountToPrepare };
         }
-
         return product;
       })
       .filter(Boolean);
@@ -120,7 +121,7 @@ class KitchenOrderController {
       orderWaiter
     });
 
-    // SOCKET
+    // SOCKET — broadcast criação (apenas se não estiver baixado)
     if (!isMade) {
       socket.emit('kitchen-order-created', kitchenOrderCreated);
     }
@@ -150,30 +151,12 @@ class KitchenOrderController {
       products,
     });
 
-    // SOCKET
+    // SOCKET — broadcast update
     socket.emit('kitchen-order-updated', updatedKitchenOrder);
 
     res.json({
       message: 'Pedido da cozinha atualizado',
       kitchenOrder: updatedKitchenOrder,
-    });
-  }
-
-  async show(req, res) {
-    const { id } = req.params;
-
-    const kitchenOrder = await KitchenOrdersRepository.findById(id);
-
-    if (!kitchenOrder) {
-      return res.status(400).json({
-        message: 'Pedido da cozinha não encontrado',
-        kitchenOrder: null,
-      });
-    }
-
-    return res.json({
-      kitchenOrder,
-      message: 'Pedido da cozinha encontrado',
     });
   }
 
@@ -194,6 +177,24 @@ class KitchenOrderController {
     res.json({ message: 'Pedidos da cozinha desta comanda foram deletados' });
   }
 
+  async show(req, res) {
+    const { id } = req.params;
+
+    const kitchenOrder = await KitchenOrdersRepository.findById(id);
+
+    if (!kitchenOrder) {
+      return res.status(400).json({
+        message: 'Pedido da cozinha não encontrado',
+        kitchenOrder: null,
+      });
+    }
+
+    return res.json({
+      kitchenOrder,
+      message: 'Pedido da cozinha encontrado',
+    });
+  }
+
   async getCommandOrders(req, res) {
     const { commandId } = req.params;
 
@@ -203,12 +204,8 @@ class KitchenOrderController {
       });
     }
 
-    // Grab the orders of this command that already was being sended to kitchen
-    const commandKitchenOrders = await KitchenOrdersRepository.findByCommandId({
-      commandId,
-    });
+    const commandKitchenOrders = await KitchenOrdersRepository.findByCommandId({ commandId });
 
-    // This all orders with products gathered
     const completeCommandKitchenOrders =
       commandKitchenOrders.length > 0
         ? gatherKitchenOrder(commandKitchenOrders)
@@ -218,6 +215,38 @@ class KitchenOrderController {
       completeCommandKitchenOrders?.products;
 
     res.send(commandProductsSendedToKitchen);
+  }
+
+  /**
+   * NOVO: reordenar pedidos abertos de uma categoria
+   * POST /kitchen-orders/reorder
+   * body: { category: 'kitchen'|'bar', ids: string[] }  // ids na nova ordem
+   */
+  async reorder(req, res) {
+    const socket = req.io;
+    const { category, ids } = req.body;
+
+    if (!category || !Array.isArray(ids)) {
+      return res.status(400).json({ message: 'bad request' });
+    }
+
+    try {
+      const updatedList = await KitchenOrdersRepository.reorder({ category, ids });
+
+      // SOCKET — broadcast reordenação (sala global ou por categoria, se usar rooms)
+      socket.emit('kitchen-orders-reordered', {
+        category,
+        ids: updatedList.map(o => String(o._id)),
+      });
+
+      return res.json({
+        ok: true,
+        category,
+        orders: updatedList,
+      });
+    } catch (e) {
+      return res.status(400).json({ message: e.message || 'reorder failed' });
+    }
   }
 }
 

@@ -54,6 +54,8 @@ router.get(
   KitchenOrderController.getCommandOrders
 );
 
+router.post('/kitchen/orders/reorder', KitchenOrderController.reorder);
+
 // Cashier Routes
 router.get('/cashiers', CashierController.index);
 router.get('/cashiers/:id', CashierController.show);
